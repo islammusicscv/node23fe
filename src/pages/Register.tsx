@@ -1,6 +1,7 @@
 import './Register.css';
 import {SyntheticEvent, useState} from "react";
 import axios from "axios";
+import {Navigate} from "react-router-dom";
 
 const Register = () => {
   const[firstName, setFirstName] = useState('');
@@ -9,24 +10,46 @@ const Register = () => {
   const[pass1, setPass1] = useState('');
   const[pass2, setPass2] = useState('');
 
+  const[errorText, setErrorText] = useState('');
+
+  const[redirect, setRedirect] = useState(false);
+
   const submit = async (e: SyntheticEvent) => {
       e.preventDefault();
 
-      const data = {
-          "first_name": firstName,
-          "last_name": lastName,
-          "email": email,
-          "password": pass1
-      };
-      console.log(data);
-      const res = await axios.post('http://localhost:3000/users', data);
-      console.log(res);
+      if (pass1 != pass2)  {
+          setErrorText('Gesli se ne ujemata');
+      }
+      if (pass1 == pass2) {
+          const data = {
+              "first_name": firstName,
+              "last_name": lastName,
+              "email": email,
+              "password": pass1
+          };
 
+          const res = await axios.post('http://localhost:3000/users', data);
+
+          if (res.status != 201) {
+              setErrorText('Napaka v registracijskih podatkih');
+              console.log(res.data);
+          }
+
+          if (res.status == 201) {
+              //redirect na login
+              setRedirect(true);
+          }
+      }
+  }
+
+  if (redirect) {
+      return <Navigate to='/login' />;
   }
 
   return (
       <>
       <main className="form-signin w-100 m-auto">
+          <h2 className="error">{errorText}</h2>
           <form onSubmit={submit}>
               <h1 className="h3 mb-3 fw-normal">Please register</h1>
               <div className="form-floating">
