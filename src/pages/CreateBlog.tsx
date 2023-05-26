@@ -1,5 +1,6 @@
-import {SyntheticEvent, useState} from "react";
+import {SyntheticEvent, useEffect, useState} from "react";
 import axios from "axios";
+import {Navigate} from "react-router-dom";
 
 const style = {
     height: "100%"
@@ -12,6 +13,17 @@ const CreateBlog = () => {
 
     const [errorText, setErrorText] = useState('');
     const [redirect, setRedirect] = useState(false);
+
+
+    const [categories, setCategoies] =
+        useState([]);
+    const getCategories = async () => {
+        const getCat =
+            await axios.get('http://localhost:3000/categories');
+        setCategoies(getCat.data);
+    }
+    //ko se spletna stran naloži se sproži ta effect in požene funkcijo
+    useEffect(() => {getCategories()}, []);
 
     const submit = async (e:SyntheticEvent) => {
       e.preventDefault();
@@ -27,9 +39,16 @@ const CreateBlog = () => {
           await axios.post('http://localhost:3000/blogs',
               data,
               {withCredentials: true});
-      console.log(res);
+
+      if (res.status == 201) {
+          setRedirect(true);
+      }
+
     }
 
+    if (redirect) {
+        return <Navigate to='/' />;
+    }
 
   return (
       <>
@@ -42,6 +61,18 @@ const CreateBlog = () => {
                              placeholder="Title"
                              onChange={(e) => setTitle(e.target.value)}/>
                       <label htmlFor="floatingInput">Title</label>
+                  </div>
+                  <div className="form-floating">
+                      <select className="form-control" id="floatingSelect"
+                             placeholder="Category"
+                             onChange={(e) => setCategory(e.target.value)}>
+                          {categories.map((category:any, i)=>{
+                              return (
+                                  <option value={category.id} key={category.id}>{category.title}</option>
+                              )})
+                          }
+                      </select>
+                      <label htmlFor="floatingSelect">Category</label>
                   </div>
                   <div className="form-floating">
                       <textarea className="form-control" id="floatingContent"
